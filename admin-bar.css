@@ -1,0 +1,8 @@
+#wpadminbar #wp-admin-bar-rs-manage > .ab-item::before {
+	content: "\f100";
+	top: 2px;
+}
+
+#wpadminbar #wp-admin-bar-appearance.rs-appearance-node {
+	margin-top: 0;
+}
