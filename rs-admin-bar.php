@@ -2,13 +2,13 @@
 /*
 Plugin Name: RS Admin Bar
 Description: Customizes the WordPress admin bar providing quick links to manage post types, users, plugins, etc.
-Version: 1.0.1
+Version: 1.1.0
 Author: Radley Sustaire
 */
 
 class RS_Admin_Bar {
 	
-	public $version = '1.0.1';
+	public $version = '1.1.0';
 	
 	public function __construct() {
 		
@@ -142,12 +142,23 @@ class RS_Admin_Bar {
 		// Add a link to Edit Site
 		if ( wp_is_block_theme() ) {
 			$added_items += 1;
-			$wp_admin_bar->remove_node('site-editor');
+			
+			$edit_site_url = admin_url( 'site-editor.php' );
+			$edit_site_node = (array) $wp_admin_bar->get_node( 'site-editor' );
+			
+			if ( $edit_site_node ) {
+				$wp_admin_bar->remove_node('site-editor');
+				
+				if ( !empty($edit_site_node['href']) ) {
+					$edit_site_url = $edit_site_node['href'];
+				}
+			}
+			
 			$wp_admin_bar->add_menu( array(
 				'parent' => $parent,
 				'id'     => 'rs-site-editor',
 				'title'  => 'Edit Site',
-				'href'   => admin_url( 'site-editor.php' ),
+				'href'   => $edit_site_url,
 			) );
 			
 			// Add sub links to the site editor screens for: Navigation, Styles, Pages, Templates, Patterns
