@@ -5,7 +5,7 @@ Description: Customizes the WordPress admin bar providing quick links to manage 
 Version: 1.1.1
 Author: Radley Sustaire
 Author URI: https://radleysustaire.com
-GitHub Plugin URI: https://github.com/RadGH/rs-admin-bar
+GitHub Plugin URI: https://github.com/RadGH/RS-Admin-Bar
 */
 
 class RS_Admin_Bar {
