@@ -71,3 +71,12 @@ Hyphens represent separators (technically, it's the end of a group).
   * Product tags
   * Product shipping classes
 * _[Other custom post types will be displayed here]_
+
+
+## Changelog
+
+### 1.1.1
+* Added GitHub Updater support
+
+### 1.1.0
+* Initial release
