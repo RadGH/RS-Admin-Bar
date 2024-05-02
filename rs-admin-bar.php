@@ -184,7 +184,7 @@ class RS_Admin_Bar {
 				$edit_site_title = 'Current Template';
 				
 				if ( $post_type && $template ) {
-					$edit_site_title .= ': <div class="rs-text-node">' . $template . '</div>';
+					$edit_site_title .= ': <div class="rs-text-node rs-node-description">' . $template . '</div>';
 				}
 				
 				$wp_admin_bar->add_node(array(
@@ -212,6 +212,39 @@ class RS_Admin_Bar {
 				'href'   => admin_url( 'site-editor.php?path=%2Fnavigation' ),
 			) );
 			
+			// Get custom navigation parts and add a link to edit each under the Navigations menu
+			// (Technically these are listed under Patterns > Navigation Parts in the editor, but that's weird)
+			$navigation_parts = get_posts(array('post_type' => 'wp_navigation'));
+			
+			if ( $navigation_parts ) {
+				// Add a link to all navigation items, same as the parent node
+				$wp_admin_bar->add_node(array(
+					'parent' => 'rs-site-editor-navigation',
+					'id'     => 'rs-site-editor-navigation-all',
+					'title'  => 'All Navigation Menus',
+					'href'   => admin_url( 'site-editor.php?path=%2Fnavigation' ),
+				));
+				
+				// Group navigation items together
+				$wp_admin_bar->add_node(array(
+					'parent' => 'rs-site-editor-navigation',
+					'id'     => 'rs-site-editor-navigation-items',
+					'group'  => true,
+				));
+				
+				foreach( $navigation_parts as $p ) {
+					$post_id = $p->ID;
+					$title = $p->post_title;
+					
+					$wp_admin_bar->add_node(array(
+						'parent' => 'rs-site-editor-navigation-items',
+						'id'     => 'rs-site-editor-navigation-' . $post_id,
+						'title'  => $title,
+						'href'   => get_edit_post_link( $post_id ),
+					));
+				}
+			}
+			
 			$wp_admin_bar->add_menu( array(
 				'parent' => 'rs-site-editor',
 				'id'     => 'rs-site-editor-styles',
@@ -233,12 +266,77 @@ class RS_Admin_Bar {
 				'href'   => admin_url( 'site-editor.php?path=%2Fwp_template' ),
 			) );
 			
+			// Get custom template parts and add a link to edit each under the Templates menu
+			// (Technically these are listed under Patterns > Template Parts in the editor, but that's weird)
+			$template_parts = get_posts(array('post_type' => 'wp_template_part'));
+			
+			if ( $template_parts ) {
+				// Add a link to all navigation items, same as the parent node
+				$wp_admin_bar->add_node(array(
+					'parent' => 'rs-site-editor-templates',
+					'id'     => 'rs-site-editor-templates-all',
+					'title'  => 'All Templates',
+					'href'   => admin_url( 'site-editor.php?path=%2Fwp_template' ),
+				));
+				
+				// Group navigation items together
+				$wp_admin_bar->add_node(array(
+					'parent' => 'rs-site-editor-templates',
+					'id'     => 'rs-site-editor-templates-items',
+					'group'  => true,
+				));
+				
+				foreach( $template_parts as $p ) {
+					$post_id = $p->ID;
+					$title = $p->post_title;
+					
+					$wp_admin_bar->add_node(array(
+						'parent' => 'rs-site-editor-templates-items',
+						'id'     => 'rs-site-editor-templates-items-' . $post_id,
+						'title'  => $title,
+						'href'   => get_edit_post_link( $post_id ),
+					));
+				}
+			}
+			
 			$wp_admin_bar->add_menu( array(
 				'parent' => 'rs-site-editor',
 				'id'     => 'rs-site-editor-patterns',
 				'title'  => 'Patterns',
 				'href'   => admin_url( 'site-editor.php?path=%2Fpatterns' ),
 			) );
+			
+			// Get custom patterns and add them under the Patterns section
+			$pattern_posts = get_posts(array('post_type' => 'wp_block'));
+			
+			if ( $pattern_posts ) {
+				// Add a link to all navigation items, same as the parent node
+				$wp_admin_bar->add_node(array(
+					'parent' => 'rs-site-editor-patterns',
+					'id'     => 'rs-site-editor-patterns-all',
+					'title'  => 'All Patterns',
+					'href'   => admin_url( 'site-editor.php?path=%2Fpatterns' ),
+				));
+				
+				// Group navigation items together
+				$wp_admin_bar->add_node(array(
+					'parent' => 'rs-site-editor-patterns',
+					'id'     => 'rs-site-editor-patterns-items',
+					'group'  => true,
+				));
+				
+				foreach( $pattern_posts as $p ) {
+					$post_id = $p->ID;
+					$title = $p->post_title;
+					
+					$wp_admin_bar->add_node(array(
+						'parent' => 'rs-site-editor-patterns-items',
+						'id'     => 'rs-site-editor-pattern-' . $post_id,
+						'title'  => $title,
+						'href'   => get_edit_post_link( $post_id ),
+					));
+				}
+			}
 			
 			// Move the "Appearance" group into the "Edit Site" group
 			$appearance_node = (array) $wp_admin_bar->get_node( 'appearance' );

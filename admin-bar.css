@@ -16,11 +16,18 @@
 }
 
 #wpadminbar .rs-text-node {
-	opacity: 0.5;
 	font-size: 0.85em;
 	line-height: 1.15em;
 }
 
 #wpadminbar li.rs-has-text-node > a.ab-item > .rs-text-node {
 	margin-top: 0.5em;
+}
+
+#wpadminbar .rs-node-description {
+	opacity: 0.5;
+}
+
+#wpadminbar .dashicons::before {
+	font-family: dashicons !important;
 }
