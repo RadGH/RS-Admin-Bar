@@ -24,6 +24,9 @@ class RS_Admin_Bar {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_bar_css' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_admin_bar_css' ) );
 		
+		// Clear cached posts whenever a post of the same type is saved or trashed
+		add_action( 'save_post', array( $this, 'clear_cached_post_queries' ) );
+		
 	}
 	
 	public function enqueue_admin_bar_css() {
@@ -232,7 +235,7 @@ class RS_Admin_Bar {
 			
 			// Get custom navigation parts and add a link to edit each under the Navigations menu
 			// (Technically these are listed under Patterns > Navigation Parts in the editor, but that's weird)
-			$navigation_parts = get_posts(array('post_type' => 'wp_navigation'));
+			$navigation_parts = $this->query_post_type( 'wp_navigation' );
 			
 			if ( $navigation_parts ) {
 				// Add a link to all navigation items, same as the parent node
@@ -253,12 +256,13 @@ class RS_Admin_Bar {
 				foreach( $navigation_parts as $p ) {
 					$post_id = $p->ID;
 					$title = $p->post_title;
+					$edit_url = $p->edit_url;
 					
 					$wp_admin_bar->add_node(array(
 						'parent' => 'rs-site-editor-navigation-items',
 						'id'     => 'rs-site-editor-navigation-' . $post_id,
 						'title'  => $title,
-						'href'   => get_edit_post_link( $post_id ),
+						'href'   => $edit_url,
 					));
 				}
 			}
@@ -286,7 +290,7 @@ class RS_Admin_Bar {
 			
 			// Get custom template parts and add a link to edit each under the Templates menu
 			// (Technically these are listed under Patterns > Template Parts in the editor, but that's weird)
-			$template_parts = get_posts(array('post_type' => 'wp_template_part'));
+			$template_parts = $this->query_post_type( 'wp_template_part' );
 			
 			if ( $template_parts ) {
 				// Add a link to all navigation items, same as the parent node
@@ -295,6 +299,14 @@ class RS_Admin_Bar {
 					'id'     => 'rs-site-editor-templates-all',
 					'title'  => 'All Templates',
 					'href'   => admin_url( 'site-editor.php?path=%2Fwp_template' ),
+				));
+				
+				// Add a link to All Template Parts (which is actually under the Patterns menu)
+				$wp_admin_bar->add_node(array(
+					'parent' => 'rs-site-editor-templates',
+					'id'     => 'rs-site-editor-templates-parts',
+					'title'  => 'All Template Parts',
+					'href'   => admin_url( 'site-editor.php?path=%2Fwp_template_part%2Fall' ),
 				));
 				
 				// Group navigation items together
@@ -307,12 +319,13 @@ class RS_Admin_Bar {
 				foreach( $template_parts as $p ) {
 					$post_id = $p->ID;
 					$title = $p->post_title;
+					$edit_url = $p->edit_url;
 					
 					$wp_admin_bar->add_node(array(
 						'parent' => 'rs-site-editor-templates-items',
 						'id'     => 'rs-site-editor-templates-items-' . $post_id,
 						'title'  => $title,
-						'href'   => get_edit_post_link( $post_id ),
+						'href'   => $edit_url,
 					));
 				}
 			}
@@ -325,7 +338,7 @@ class RS_Admin_Bar {
 			) );
 			
 			// Get custom patterns and add them under the Patterns section
-			$pattern_posts = get_posts(array('post_type' => 'wp_block'));
+			$pattern_posts = $this->query_post_type( 'wp_block' );
 			
 			if ( $pattern_posts ) {
 				// Add a link to all navigation items, same as the parent node
@@ -346,12 +359,13 @@ class RS_Admin_Bar {
 				foreach( $pattern_posts as $p ) {
 					$post_id = $p->ID;
 					$title = $p->post_title;
+					$edit_url = $p->edit_url;
 					
 					$wp_admin_bar->add_node(array(
 						'parent' => 'rs-site-editor-patterns-items',
 						'id'     => 'rs-site-editor-pattern-' . $post_id,
 						'title'  => $title,
-						'href'   => get_edit_post_link( $post_id ),
+						'href'   => $p->edit_url,
 					));
 				}
 			}
@@ -680,6 +694,90 @@ class RS_Admin_Bar {
 		}
 		
 		return $added_items > 0;
+	}
+	
+	
+	
+	/**
+	 * Query a post type for posts
+	 *
+	 * @param string $post_type
+	 * @param array $custom_args
+	 *
+	 * @return array {
+	 *     @type int $ID
+	 *     @type string $post_title
+	 *     @type string $edit_url
+	 * }
+	 */
+	private function query_post_type( $post_type, $custom_args = array() ) {
+		// Generate a cache key based on post type
+		if ( empty($custom_args) ) {
+			$cache_key = 'rs_admin_bar_query_' . $post_type;
+		}else{
+			$cache_key = 'rs_admin_bar_query_' . $post_type . '_' . md5( serialize($custom_args) );
+		}
+		
+		// Use cached value if available
+		$cached = get_transient( $cache_key );
+		if ( $cached ) return $cached;
+		
+		// Query the post type
+		$args = wp_parse_args(array(
+			'post_type' => $post_type,
+		));
+		
+		// Get all posts of this type
+		$raw_posts = get_posts($args);
+		
+		// Store only the ID and title, discard the rest for efficiency
+		$posts = array();
+		
+		foreach( $raw_posts as $p ) {
+			$posts[] = (object) array(
+				'ID'         => $p->ID,
+				'post_title' => $p->post_title,
+				'edit_url'   => get_edit_post_link( $p->ID ),
+			);
+		}
+		
+		// Remove duplicates if they have the same edit_url
+		// (Because there may be multiple footers that go to the same edit screen, for example)
+		$edit_urls = array();
+		
+		foreach( $posts as $k => $p ) {
+			if ( isset($edit_urls[$p->edit_url]) ) {
+				unset($posts[$k]);
+			}else{
+				$edit_urls[$p->edit_url] = true;
+			}
+		}
+		
+		// Store the results for 1 hour
+		set_transient( $cache_key, $posts, HOUR_IN_SECONDS );
+		
+		return $posts;
+	}
+	
+	/**
+	 * Clear cached post queries when a post is saved or trashed
+	 *
+	 * @param int $post_id
+	 *
+	 * @return void
+	 */
+	public function clear_cached_post_queries( $post_id ) {
+		$post_type = get_post_type($post_id);
+		$cachable_post_types = array(
+			'wp_navigation',
+			'wp_template_part',
+			'wp_block',
+		);
+		
+		if ( in_array( $post_type, $cachable_post_types, true ) ) {
+			$cache_key = 'rs_admin_bar_query_' . $post_type;
+			delete_transient( $cache_key );
+		}
 	}
 	
 }
