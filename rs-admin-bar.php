@@ -24,9 +24,21 @@ class RS_Admin_Bar {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_bar_css' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_admin_bar_css' ) );
 		
+		// When displaying the admin menu, cache the list of top-level menu items to use in the admin bar later
+		add_action( 'admin_menu', array( $this, 'cache_admin_menu' ), 20000 );
+		
 		// Clear cached posts whenever a post of the same type is saved or trashed
 		add_action( 'save_post', array( $this, 'clear_cached_post_queries' ) );
 		
+		acf_add_options_sub_page( array(
+			'parent_slug' => 'options-general.php',
+			'page_title' => 'RS Font Awesome 6 – Settings',
+			'menu_title' => 'RS Font Awesome 6',
+			'menu_slug' => 'rs-font-awesome-6',
+			'post_id' => 'rs_icons', // $s = get_field( 's', 'rs_icons' );
+			'capability' => 'rabble',
+			'redirect' => false
+		) );
 	}
 	
 	public function enqueue_admin_bar_css() {
@@ -133,6 +145,15 @@ class RS_Admin_Bar {
 			));
 		}
 	
+		if ( $this->add_nodes__settings( $wp_admin_bar, 'rs-manage-settings') ) {
+			$added_items += 1;
+			$wp_admin_bar->add_menu( array(
+				'id'     => 'rs-manage-settings',
+				'parent' => 'rs-manage',
+				'group'   => true,
+			) );
+		}
+	
 		if ( $this->add_nodes__content( $wp_admin_bar, 'rs-manage-content') ) {
 			$added_items += 1;
 			$wp_admin_bar->add_menu( array(
@@ -159,6 +180,14 @@ class RS_Admin_Bar {
 	}
 	
 	
+	/**
+	 * Adds the Edit Site section to the menu
+	 *
+	 * @param $wp_admin_bar
+	 * @param $parent
+	 *
+	 * @return bool
+	 */
 	private function add_nodes__site( $wp_admin_bar, $parent ) {
 		$added_items = 0;
 		
@@ -369,16 +398,6 @@ class RS_Admin_Bar {
 					));
 				}
 			}
-			
-			// Move the "Appearance" group into the "Edit Site" group
-			$appearance_node = (array) $wp_admin_bar->get_node( 'appearance' );
-			
-			if ( $appearance_node ) {
-				$appearance_node['parent'] = 'rs-site-editor';
-				$appearance_node['meta']['class'] = 'rs-appearance-node';
-				$wp_admin_bar->remove_node( $appearance_node['id'] );
-				$wp_admin_bar->add_node( $appearance_node );
-			}
 		}
 		
 		// Check if the theme supports navigation menus
@@ -403,155 +422,275 @@ class RS_Admin_Bar {
 			) );
 		}
 		
-		// Add a link to plugins if the user can manage plugins
-		if ( current_user_can( 'activate_plugins' ) ) {
-			$added_items += 1;
-			
-			// If the plugins link already exists, move it to the Manage group, otherwise add it
-			$plugin_node = (array) $wp_admin_bar->get_node( 'plugins' );
-			
-			if ( $plugin_node ) {
-				$wp_admin_bar->remove_node($plugin_node['id']);
-				$plugin_node['parent'] = $parent;
-			}else{
-				$plugin_node = array(
-					'parent' => $parent,
-					'id'     => 'plugins',
-					'title'  => 'Plugins',
-					'href'   => admin_url( 'plugins.php' ),
-				);
-			}
-			
-			$wp_admin_bar->add_menu($plugin_node);
-			
-			
-			// Add a sub menu item to view all plugins
-			$wp_admin_bar->add_menu( array(
-				'parent' => 'plugins',
-				'id'     => 'all-plugins',
-				'title'  => 'Installed Plugins',
-				'href'   => admin_url( 'plugins.php' ),
-			) );
-			
-			// If any plugins have updates available, show a link to them
-			$update_data = wp_get_update_data();
-			if ( $update_data['counts']['total'] ) {
-				$added_items += 1;
-				$wp_admin_bar->remove_node('updates');
-				$wp_admin_bar->add_menu( array(
-					'parent' => 'plugins',
-					'id'     => 'plugin-updates',
-					'title'  => 'Update Available (' . $update_data['counts']['total'] . ')',
-					'href'   => admin_url( 'update-core.php' ),
-				) );
-			}
-			
-			// Add a sub menu item to add a new plugin
-			$wp_admin_bar->add_menu( array(
-				'parent' => 'plugins',
-				'id'     => 'new-plugin',
-				'title'  => 'Add New',
-				'href'   => admin_url( 'plugin-install.php' ),
-			) );
-		}
-		
-		
-		// Add a link to users if the user can manage users
-		if ( current_user_can( 'edit_users' ) ) {
-			$added_items += 1;
-			$wp_admin_bar->add_menu( array(
-				'parent' => $parent,
-				'id'     => 'manage-users',
-				'title'  => 'Users',
-				'href'   => admin_url( 'users.php' ),
-			) );
-			
-			// Add a sub link to view all users
-			$wp_admin_bar->add_menu( array(
-				'parent' => 'manage-users',
-				'id'     => 'all-users',
-				'title'  => 'All Users',
-				'href'   => admin_url( 'users.php' ),
-			) );
-			
-			// If the user can add new users, add a link to add a new user
-			if ( current_user_can( 'create_users' ) ) {
-				$added_items += 1;
-				$wp_admin_bar->add_menu( array(
-					'parent' => 'manage-users',
-					'id'     => 'rs-add-user',
-					'title'  => 'Add New User',
-					'href'   => admin_url( 'user-new.php' ),
-				) );
-			}
-			
-			// Add a link to edit your profile
-			$added_items += 1;
-			$wp_admin_bar->add_menu( array(
-				'parent' => 'manage-users',
-				'id'     => 'rs-edit-profile',
-				'title'  => 'Your Profile',
-				'href'   => admin_url( 'profile.php' ),
-			) );
-		}
-		
-		// Move comments link
-		$comments_node = (array) $wp_admin_bar->get_node( 'comments' );
-		if ( $comments_node ) {
-			$added_items += 1;
-			$wp_admin_bar->remove_node( $comments_node['id'] );
-			$comments_node['parent'] = $parent;
-			$comments_node['id'] = 'rs-comments';
-			$comments_node['title'] = 'Comments';
-			$wp_admin_bar->add_node( $comments_node );
-			
-			$comment_counts = wp_count_comments();
-			
-			// Add a sub link to view all comments
-			$wp_admin_bar->add_menu( array(
-				'parent' => 'rs-comments',
-				'id'     => 'all-comments',
-				'title'  => 'All Comments (' . $comment_counts->total_comments . ')',
-				'href'   => admin_url( 'edit-comments.php' ),
-			) );
-			
-			// Add a link to pending comments
-			$added_items += 1;
-			$wp_admin_bar->add_menu( array(
-				'parent' => 'rs-comments',
-				'id'     => 'pending-comments',
-				'title'  => 'Pending (' . $comment_counts->moderated . ')',
-				'href'   => admin_url( 'edit-comments.php?comment_status=moderated' ),
-			) );
-			
-			// Add a link to approved comments
-			$added_items += 1;
-			$wp_admin_bar->add_menu( array(
-				'parent' => 'rs-comments',
-				'id'     => 'approved-comments',
-				'title'  => 'Approved (' . $comment_counts->approved . ')',
-				'href'   => admin_url( 'edit-comments.php?comment_status=approved' ),
-			) );
-			
-			// Add a link to spam comments (only if there are any)
-			if ( $comment_counts->spam > 0 ) {
-				$added_items += 1;
-				$wp_admin_bar->add_menu( array(
-					'parent' => 'rs-comments',
-					'id'     => 'spam-comments',
-					'title'  => 'Spam (' . $comment_counts->spam . ')',
-					'href'   => admin_url( 'edit-comments.php?comment_status=spam' ),
-				) );
-			}
-		}
+		// Remove some default nodes which are handled differently by this plugin
+		$wp_admin_bar->remove_node( 'comments' );
+		$wp_admin_bar->remove_node( 'plugins' );
+		$wp_admin_bar->remove_node( 'appearance' );
 		
 		return $added_items > 0;
 	}
 	
+	/**
+	 * Adds the Settings section to the menu
+	 *
+	 * @param $wp_admin_bar
+	 * @param $parent
+	 *
+	 * @return bool
+	 */
+	private function add_nodes__settings( $wp_admin_bar, $parent ) {
+		$items_added = 0;
+		
+		// Add a completely custom Settings node using cached pages from the backend, if available
+		$settings_menu = $this->get_settings_menu();
+		
+		if ( $settings_menu ) foreach( $settings_menu as $slug => $menu_item ) {
+			if ( $this->add_nodes__settings__menu_item( $wp_admin_bar, $parent, $slug, $menu_item ) ) {
+				$items_added += 1;
+			}
+		}
+		
+		return $items_added > 0;
+	}
 	
+	/**
+	 * Add nodes to the "Settings" section of the admin bar using a menu item from the cached settings menu
+	 *
+	 * @param WP_Admin_Bar $wp_admin_bar
+	 * @param string $parent
+	 * @param string $slug
+	 * @param array $menu_item {
+	 *     @type string $title
+	 *     @type string $href
+	 *     @type string $capability
+	 *     @type array[]|void $children {
+	 *         @type string $title
+	 *         @type string $href
+	 *         @type string $capability
+	 *     }
+	 * }
+	 *
+	 * @return bool
+	 */
+	private function add_nodes__settings__menu_item( $wp_admin_bar, $parent, $slug, $menu_item ) {
+		$items_added = 0;
+		
+		// Check capability
+		if ( !empty($menu_item['capability']) && !current_user_can($menu_item['capability']) ) {
+			return false;
+		}
+		
+		$wp_admin_bar->add_node(array(
+			'parent' => $parent,
+			'id'     => $parent . '-' . $slug,
+			'title'  => $menu_item['title'],
+			'href'   => $menu_item['href'],
+		));
+		
+		if ( !empty($menu_item['children']) ) {
+			foreach( $menu_item['children'] as $child_slug => $child ) {
+				$this->add_nodes__settings__menu_item( $wp_admin_bar, $parent . '-' . $slug, $child_slug, $child );
+				$items_added += 1;
+			}
+		}
+		
+		return $items_added > 0;
+	}
+	
+	/**
+	 * Get the settings menu that was cached by:
+	 * @see self::cache_admin_menu()
+	 *
+	 * @return array[] {
+	 *     @type string $title
+	 *     @type string $href
+	 *     @type string $capability
+	 *     @type array[] $children {
+	 *         @type string $title
+	 *         @type string $href
+	 *         @type string $capability
+	 *     }
+	 */
+	private function get_settings_menu() {
+		$cached = get_transient('rs_admin_bar_settings_menu');
+		
+		if ( $cached && !empty($cached['menu_items']) ) {
+			return $cached['menu_items'];
+		}
+		
+		// If not cached, just use a single link to the settings page
+		return array(
+			array(
+				'title' => 'Settings',
+				'href'  => admin_url( 'options-general.php' ),
+			),
+		);
+	}
+	
+	/**
+	 * When displaying the admin menu, cache the list of top-level menu items to use in the admin bar later
+	 * The menu is cached for 30 days. To keep it updated, it will be refreshed every hour by an admin visiting the dashboard
+	 */
+	public function cache_admin_menu() {
+		global $menu, $submenu;
+		
+		$refresh_time_seconds = HOUR_IN_SECONDS;
+		$cache_expire_time = 30 * DAY_IN_SECONDS;
+		
+		// Skip if the menu was cached within the last hour.
+		$cached = get_transient('rs_admin_bar_settings_menu');
+		if ( $cached && $cached['time'] > time() - $refresh_time_seconds ) return;
+		
+		// Only generate menu structure for admins
+		if ( ! current_user_can( 'administrator' ) ) return;
+		
+		/*
+		 * $menu[0] = array( 'Dashboard', 'read', 'index.php', '', 'menu-top menu-top-first menu-icon-dashboard', 'menu-dashboard', 'dashicons-dashboard' );
+		 *
+		 * $menu[0][0] = Menu title
+		 * $menu[0][1] = Required capability
+		 * $menu[0][2] = URL slug
+		 * $menu[0][3] = (blank for everything except ACF. Seems to be an alternate page/menu title)
+		 * $menu[0][4] = CSS classes
+		 * $menu[0][5] = Menu slug
+		 */
+		
+		$ignored_titles = array(
+			// Separators:
+			'',
+			
+			// Old:
+			'Links',
+			
+			// Already in admin bar:
+			'Dashboard',
+			'Media',
+			'Posts',
+		);
+		
+		$menu_items = array();
+		
+		// Get managed post types that already appear in the admin bar. Remove these from the list.
+		$managed_post_types = $this->get_admin_menu_post_types();
+		
+		// Function: Remove HTML (and its content) from the title
+		$__clean_menu_title = function( $title ) {
+			$title = preg_replace( '@<(\w+)\b.*?>.*?</\1>@si', '', $title );
+			$title = preg_replace( '/<[^>]*>/', '', $title );
+			$title = trim($title);
+			return $title;
+		};
+		
+		
+		foreach( $menu as $m ) {
+			$title = $m[0];
+			$capability = $m[1];
+			$slug = $m[2];
+			
+			// Remove HTML (and its content) from the title
+			// This removes the "count bubbles" like you see in the Plugins menu when an update is available
+			$title = $__clean_menu_title($title);
+			
+			// Skip menu items with an ignored title
+			if ( in_array($title, $ignored_titles, true) ) continue;
+			
+			// Ignore post types that are already managed by the admin bar
+			if ( str_contains($slug, '?post_type=')) {
+				$post_type = preg_match( '/post_type=([^&]+)/', $slug, $matches ) ? $matches[1] : '';
+				if ( $post_type && in_array($post_type, $managed_post_types, true) ) continue;
+			}
+			
+			// Store the menu item
+			$menu_items[ $slug ] = array(
+				'title' => esc_html($title),
+				'href'  => admin_url( $slug ),
+				'capability' => $capability,
+				'children' => array(),
+			);
+		}
+		
+		// Loop through submenu items to add them as children to their parent menu items
+		foreach( $submenu as $parent_slug => $sub_items ) {
+			if ( ! isset($menu_items[$parent_slug]) ) continue;
+			
+			// Add the submenu items as children
+			foreach( $sub_items as $sub ) {
+				/*
+				 * $sub[0] = Menu title
+				 * $sub[1] = Required capability
+				 * $sub[2] = URL slug
+				 */
+				$title = $sub[0];
+				$capability = $sub[1];
+				$slug = $sub[2];
+				
+				// Remove HTML (and its content) from the title
+				$title = $__clean_menu_title($title);
+				
+				// If the slug includes ".php", it's a submenu item that should be linked directly
+				// Otherwise it should use the parent slug and add ?page=slug to the url
+				if ( ! str_contains($slug, '.php') ) {
+					$href = admin_url( $parent_slug . '?page=' . $slug );
+				}else{
+					$href = admin_url( $slug );
+				}
+				
+				// Store the submenu item
+				$menu_items[$parent_slug]['children'][ $slug ] = array(
+					'title' => esc_html($title),
+					'href'  => $href,
+					'capability' => $capability,
+				);
+			}
+		}
+		
+		// Add a fake item for testing capability
+		$menu_items['test'] = array(
+			'title' => 'Test',
+			'href'  => admin_url( 'test.php' ),
+			'capability' => 'aaaaaaaaaaaaaaa',
+			'children' => array(),
+		);
+		
+		$cache_data = array(
+			'time' => time(),
+			'menu_items' => $menu_items,
+		);
+		
+		// Cache the menu
+		set_transient( 'rs_admin_bar_settings_menu', $cache_data, $cache_expire_time );
+	}
+	
+	/**
+	 * Adds the Content section to the menu
+	 *
+	 * @param $wp_admin_bar
+	 * @param $parent
+	 *
+	 * @return bool
+	 */
 	private function add_nodes__content( $wp_admin_bar, $parent ) {
 		$added_items = 0;
 		
+		$post_types = $this->get_admin_menu_post_types();
+		
+		// Add each post type to the admin bar
+		if ( $post_types ) foreach( $post_types as $post_type ) {
+			if ( $this->add_single_post_type_node( $wp_admin_bar, $parent, $post_type ) ) {
+				$added_items += 1;
+			}
+		}
+		
+		return $added_items > 0;
+		
+	}
+	
+	/**
+	 * Get the post types that should appear in the admin menu
+	 *
+	 * @return array
+	 */
+	private function get_admin_menu_post_types() {
 		// First, display built-in post types: Posts, pages, media
 		$args = array(
 			'public'   => true,
@@ -571,17 +710,7 @@ class RS_Admin_Bar {
 		$custom_post_types = get_post_types( $args );
 		
 		// Combine the two, keeping built-in post types on top
-		$post_types = array_merge( $builtin_post_types, $custom_post_types );
-		
-		// Add each post type to the admin bar
-		if ( $post_types ) foreach( $post_types as $post_type ) {
-			if ( $this->add_single_post_type_node( $wp_admin_bar, $parent, $post_type ) ) {
-				$added_items += 1;
-			}
-		}
-		
-		return $added_items > 0;
-		
+		return array_merge( $builtin_post_types, $custom_post_types );
 	}
 	
 	
@@ -679,7 +808,14 @@ class RS_Admin_Bar {
 	}
 	
 	
-	
+	/**
+	 * Adds the Third Party section to the menu
+	 *
+	 * @param $wp_admin_bar
+	 * @param $parent
+	 *
+	 * @return bool
+	 */
 	private function add_nodes__third_party( $wp_admin_bar, $parent ) {
 		$added_items = 0;
 		
