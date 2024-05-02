@@ -234,16 +234,28 @@ class RS_Admin_Bar {
 		// Add a link to plugins if the user can manage plugins
 		if ( current_user_can( 'activate_plugins' ) ) {
 			$added_items += 1;
-			$wp_admin_bar->add_menu( array(
-				'parent' => $parent,
-				'id'     => 'manage-plugins',
-				'title'  => 'Plugins',
-				'href'   => admin_url( 'plugins.php' ),
-			) );
+			
+			// If the plugins link already exists, move it to the Manage group, otherwise add it
+			$plugin_node = (array) $wp_admin_bar->get_node( 'plugins' );
+			
+			if ( $plugin_node ) {
+				$wp_admin_bar->remove_node($plugin_node['id']);
+				$plugin_node['parent'] = $parent;
+			}else{
+				$plugin_node = array(
+					'parent' => $parent,
+					'id'     => 'plugins',
+					'title'  => 'Plugins',
+					'href'   => admin_url( 'plugins.php' ),
+				);
+			}
+			
+			$wp_admin_bar->add_menu($plugin_node);
+			
 			
 			// Add a sub menu item to view all plugins
 			$wp_admin_bar->add_menu( array(
-				'parent' => 'manage-plugins',
+				'parent' => 'plugins',
 				'id'     => 'all-plugins',
 				'title'  => 'Installed Plugins',
 				'href'   => admin_url( 'plugins.php' ),
@@ -255,7 +267,7 @@ class RS_Admin_Bar {
 				$added_items += 1;
 				$wp_admin_bar->remove_node('updates');
 				$wp_admin_bar->add_menu( array(
-					'parent' => 'manage-plugins',
+					'parent' => 'plugins',
 					'id'     => 'plugin-updates',
 					'title'  => 'Update Available (' . $update_data['counts']['total'] . ')',
 					'href'   => admin_url( 'update-core.php' ),
@@ -264,7 +276,7 @@ class RS_Admin_Bar {
 			
 			// Add a sub menu item to add a new plugin
 			$wp_admin_bar->add_menu( array(
-				'parent' => 'manage-plugins',
+				'parent' => 'plugins',
 				'id'     => 'new-plugin',
 				'title'  => 'Add New',
 				'href'   => admin_url( 'plugin-install.php' ),
