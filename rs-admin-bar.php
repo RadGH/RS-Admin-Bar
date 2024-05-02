@@ -39,6 +39,15 @@ class RS_Admin_Bar {
 		global $wp_admin_bar;
 		if ( ! isset($wp_admin_bar) || ! $wp_admin_bar instanceof WP_Admin_Bar ) return;
 		
+		$is_admin = is_admin();
+		$is_frontend = ! $is_admin;
+		$is_woocommerce = false;
+		
+		if ( class_exists('WooCommerce') && (is_shop() || is_product() || is_product_category() || is_product_tag()) ) {
+			$is_woocommerce = true;
+			$is_frontend = false;
+		}
+		
 		// Remove the logo
 		$wp_admin_bar->remove_node( 'wp-logo' );
 		
@@ -50,8 +59,11 @@ class RS_Admin_Bar {
 		$wp_admin_bar->add_menu(array(
 			'parent' => 'site-name',
 			'id'     => 'rs-view-site',
-			'title'  => __( 'Visit Site' ),
+			'title'  => __( 'Visit Site' ) . ($is_frontend ? ' (Current)' : ''),
 			'href'   => home_url( '/' ),
+			'meta'   => array(
+				'class' => $is_frontend ? 'rs-node-description' : '',
+			),
 		));
 		
 		// If WooCommerce is installed, re-add the link to Visit Store to keep it in the same order
@@ -62,8 +74,11 @@ class RS_Admin_Bar {
 				$wp_admin_bar->add_menu(array(
 					'parent' => 'site-name',
 					'id'     => 'view-store',
-					'title'  => __( 'Visit Store', 'woocommerce' ),
+					'title'  => __( 'Visit Store', 'woocommerce' ) . ($is_woocommerce ? ' (Current)' : ''),
 					'href'   => wc_get_page_permalink( 'shop' ),
+					'meta'   => array(
+						'class' => $is_woocommerce ? 'rs-node-description' : '',
+					),
 				));
 			}
 		}
@@ -73,8 +88,11 @@ class RS_Admin_Bar {
 		$wp_admin_bar->add_menu( array(
 			'parent' => 'site-name',
 			'id'     => 'rs-dashboard',
-			'title'  => 'Dashboard',
+			'title'  => 'Dashboard' . ($is_admin ? ' (Current)' : ''),
 			'href'   => admin_url(),
+			'meta'   => array(
+				'class' => $is_admin ? 'rs-node-description' : '',
+			),
 		) );
 		
 		// Add the "Manage" group
