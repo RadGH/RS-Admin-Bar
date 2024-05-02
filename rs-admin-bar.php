@@ -2,7 +2,7 @@
 /*
 Plugin Name: RS Admin Bar
 Description: Customizes the WordPress admin bar providing quick links to manage post types, users, plugins, etc.
-Version: 1.1.1
+Version: 1.2.0
 Author: Radley Sustaire
 Author URI: https://radleysustaire.com
 GitHub Plugin URI: https://github.com/RadGH/RS-Admin-Bar
@@ -10,7 +10,7 @@ GitHub Plugin URI: https://github.com/RadGH/RS-Admin-Bar
 
 class RS_Admin_Bar {
 	
-	public $version = '1.1.1';
+	public $version = '1.2.0';
 	
 	public function __construct() {
 		

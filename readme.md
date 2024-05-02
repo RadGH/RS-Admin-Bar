@@ -1,22 +1,22 @@
 # RS Admin Bar (WordPress Plugin)
 
-This plugin customizes many of the default admin bar nodes and reorganizes them beneath the site name dropdown menu.
+This plugin customizes many of the default admin bar nodes and reorganizes them beneath the site name dropdown menu. It includes menu items from the dashboard for easy access to common pages on the backend.
 
-## Default admin bar:
+To correctly populate the settings menus, an administrator simply needs to visit the dashboard once a month. This is not strictly required, but dashboard menu items won't be listed until this happens.
 
-The default admin bar includes the wordpress icon, edit site, updates, comments, new
+## How it works
 
-![default admin bar example](https://github.com/RadGH/rs-admin-bar/assets/2008464/f2b7ff99-1f3d-48ca-818e-35e052583016)
+Here's what the default admin bar looks like:
 
-## When this plugin is activated:
+![default admin bar example](screenshot-menu-default.png)
 
-The admin bar consolidates all default menu items under the site name dropdown.
+Here's what the admin bar looks like with this plugin:
 
-![consolidated admin bar example](https://github.com/RadGH/rs-admin-bar/assets/2008464/eb38b75e-5ba8-452a-98a4-7d8835f3996b)
+![consolidated admin bar example](screenshot-menu-custom.png)
 
-The dropdown contains plenty of useful links to edit the site, plugins, users, comments, post types, all with submenus:
+It's much simpler at first glance. The real benefit is in the dropdown menu. As you can see, there are convenient links to many of the block editor pages, as well as standard dashboard menu pages, and finally a list of post types.
 
-![example of the dropdown](https://github.com/RadGH/rs-admin-bar/assets/2008464/143312f2-99dc-4bf5-b04e-0b07bb011101)
+![example of the dropdown](screenshot-expanded-menu.png)
 
 ## Complete list of links:
 This includes items from WooCommerce and Gravity Forms. Those items only appear if you have the plugins installed.
@@ -24,56 +24,46 @@ This includes items from WooCommerce and Gravity Forms. Those items only appear 
 Hyphens represent separators (technically, it's the end of a group).
 
 * Visit Site
-* Visit Store
+* Visit Store _[if WooCommerce is installed]_
 * Dashboard
 * --
 * Edit Site
-  * Navigation _[this section only shown for block themes]_
+  * Current Template: [template name]
+  * --
+  * Navigation
+    * All Navigation Menus
+    * [menus from your theme appear here]
   * Styles
   * Pages
   * Templates
+    * All Templates
+    * All Template Parts
+    * [template parts from your theme appear here]
   * Patterns
-  * --
-  * Themes
-  * Widgets _[if theme supported]_
-  * Menus _[if theme supported]_
+    * All Patterns
+    * [patterns from your theme appear here]
+* --
+* Comments 
+* Appearance
 * Plugins
-  * Installed Plugins
-  * Update Available (3) _[hidden if empty]_
-  * Add New
 * Users
-  * All Users
-  * Add New User
-  * Your Profile
-* Comments
-  * All Comments (1)
-  * Pending (0)
-  * Approved (1)
-  * _[other statuses are hidden if empty]_
+* Tools
+* Settings
 * --
 * Posts
-  * All Posts
-  * Add New
-  * --
-  * Tags
-  * Formats
 * Pages
-  * All Pages
-  * Add New
 * Media
-  * Library
-  * Add New
 * Products
-  * All Products
-  * Add New
-  * --
-  * Product categories
-  * Product tags
-  * Product shipping classes
-* _[Other custom post types will be displayed here]_
-
 
 ## Changelog
+
+### 1.2.0
+* Updated to use menus from the dashboard, even when on the front-end
+* Optimized query for edit site submenus
+* Added indicator if you are on the front end, backend, or any woocommerce page
+* Added submenus for Edit Site items: Navigation, Templates, Patterns
+* Improved link to edit site if using block editor
+* Fixed duplicate link to Plugins on frontend
 
 ### 1.1.1
 * Added GitHub Updater support
