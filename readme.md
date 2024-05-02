@@ -16,7 +16,7 @@ Here's what the admin bar looks like with this plugin:
 
 It's much simpler at first glance. The real benefit is in the dropdown menu. As you can see, there are convenient links to many of the block editor pages, as well as standard dashboard menu pages, and finally a list of post types.
 
-![example of the dropdown](screenshot-expanded-menu.png)
+![example of the dropdown](screenshot-expanded.png)
 
 ## Complete list of links:
 This includes items from WooCommerce and Gravity Forms. Those items only appear if you have the plugins installed.
