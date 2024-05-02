@@ -149,7 +149,7 @@ class RS_Admin_Bar {
 			$edit_site_node = (array) $wp_admin_bar->get_node( 'site-editor' );
 			
 			if ( $edit_site_node ) {
-				$wp_admin_bar->remove_node('site-editor');
+				$wp_admin_bar->remove_node($edit_site_node['id']);
 				
 				if ( !empty($edit_site_node['href']) ) {
 					$edit_site_url = $edit_site_node['href'];
@@ -162,6 +162,47 @@ class RS_Admin_Bar {
 				'title'  => 'Edit Site',
 				'href'   => $edit_site_url,
 			) );
+			
+			// If there was already a link to edit site for the current page, add that as the first link
+			if ( $edit_site_node ) {
+				// Get the postType and postID from the $edit_site_url
+				$url = wp_parse_url( $edit_site_url, PHP_URL_QUERY ); // postType=wp_template&postId=zingmap-2024//page-no-title
+				$post_type = '';
+				$template = '';
+				foreach( explode('&', $url) as $part ) {
+					$part = explode('=', $part);
+					switch( $part[0] ) {
+						case 'postType':
+							$post_type = $part[1];
+							break;
+						case 'postId':
+							$template = str_replace( '//', '/', $part[1] );
+							break;
+					}
+				}
+				
+				$edit_site_title = 'Current Template';
+				
+				if ( $post_type && $template ) {
+					$edit_site_title .= ': <div class="rs-text-node">' . $template . '</div>';
+				}
+				
+				$wp_admin_bar->add_node(array(
+					'parent' => 'rs-site-editor',
+					'id'     => 'rs-site-editor-current',
+					'group' => true,
+				));
+				
+				$wp_admin_bar->add_node(array(
+					'parent' => 'rs-site-editor-current',
+					'id'     => 'rs-site-editor-current-page',
+					'title'  => $edit_site_title,
+					'href'   => $edit_site_url,
+					'meta'   => array(
+						'class' => 'rs-has-text-node',
+					),
+				));
+			}
 			
 			// Add sub links to the site editor screens for: Navigation, Styles, Pages, Templates, Patterns
 			$wp_admin_bar->add_menu( array(
@@ -201,10 +242,11 @@ class RS_Admin_Bar {
 			
 			// Move the "Appearance" group into the "Edit Site" group
 			$appearance_node = (array) $wp_admin_bar->get_node( 'appearance' );
+			
 			if ( $appearance_node ) {
 				$appearance_node['parent'] = 'rs-site-editor';
 				$appearance_node['meta']['class'] = 'rs-appearance-node';
-				$wp_admin_bar->remove_node( 'appearance' );
+				$wp_admin_bar->remove_node( $appearance_node['id'] );
 				$wp_admin_bar->add_node( $appearance_node );
 			}
 		}
@@ -327,7 +369,7 @@ class RS_Admin_Bar {
 		$comments_node = (array) $wp_admin_bar->get_node( 'comments' );
 		if ( $comments_node ) {
 			$added_items += 1;
-			$wp_admin_bar->remove_node( 'comments' );
+			$wp_admin_bar->remove_node( $comments_node['id'] );
 			$comments_node['parent'] = $parent;
 			$comments_node['id'] = 'rs-comments';
 			$comments_node['title'] = 'Comments';
@@ -515,7 +557,7 @@ class RS_Admin_Bar {
 		$gf_node = (array) $wp_admin_bar->get_node( 'gform-forms' );
 		if ( $gf_node ) {
 			$added_items += 1;
-			$wp_admin_bar->remove_node( 'gf_edit_forms' );
+			$wp_admin_bar->remove_node( $gf_node['id'] );
 			$gf_node['parent'] = $parent;
 			$gf_node['title'] = 'Gravity Forms';
 			$wp_admin_bar->add_node( $gf_node );

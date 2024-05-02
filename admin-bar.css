@@ -6,3 +6,21 @@
 #wpadminbar #wp-admin-bar-appearance.rs-appearance-node {
 	margin-top: 0;
 }
+
+#wpadminbar li.rs-has-text-node {
+}
+
+#wpadminbar li.rs-has-text-node > a.ab-item {
+	line-height: 1 !important;
+	height: auto !important;
+}
+
+#wpadminbar .rs-text-node {
+	opacity: 0.5;
+	font-size: 0.85em;
+	line-height: 1.15em;
+}
+
+#wpadminbar li.rs-has-text-node > a.ab-item > .rs-text-node {
+	margin-top: 0.5em;
+}
