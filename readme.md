@@ -49,11 +49,13 @@ Hyphens represent separators (technically, it's the end of a group).
 * Users
 * Tools
 * Settings
+* [custom dashboard menu items appear here]
 * --
 * Posts
 * Pages
 * Media
 * Products
+* [custom post types appear here]
 
 ## Changelog
 
