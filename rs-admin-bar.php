@@ -591,10 +591,17 @@ class RS_Admin_Bar {
 				if ( $post_type && in_array($post_type, $managed_post_types, true) ) continue;
 			}
 			
+			// If the parent slug does not contain ".php", it should be at admin.php?page=slug
+			if ( ! str_contains($slug, '.php') ) {
+				$href = admin_url( 'admin.php?page=' . $slug );
+			}else{
+				$href = admin_url( $slug );
+			}
+			
 			// Store the menu item
 			$menu_items[ $slug ] = array(
 				'title' => esc_html($title),
-				'href'  => admin_url( $slug ),
+				'href'  => $href,
 				'capability' => $capability,
 				'children' => array(),
 			);
