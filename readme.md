@@ -59,6 +59,9 @@ Hyphens represent separators (technically, it's the end of a group).
 
 ## Changelog
 
+### 1.2.2
+* Fixed top-level menus with slug only, now links to admin.php?page=slug
+
 ### 1.2.1
 * Removed unused settings page
 
