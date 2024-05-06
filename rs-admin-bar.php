@@ -635,14 +635,6 @@ class RS_Admin_Bar {
 			}
 		}
 		
-		// Add a fake item for testing capability
-		$menu_items['test'] = array(
-			'title' => 'Test',
-			'href'  => admin_url( 'test.php' ),
-			'capability' => 'aaaaaaaaaaaaaaa',
-			'children' => array(),
-		);
-		
 		$cache_data = array(
 			'time' => time(),
 			'menu_items' => $menu_items,
