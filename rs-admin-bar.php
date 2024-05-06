@@ -30,15 +30,6 @@ class RS_Admin_Bar {
 		// Clear cached posts whenever a post of the same type is saved or trashed
 		add_action( 'save_post', array( $this, 'clear_cached_post_queries' ) );
 		
-		acf_add_options_sub_page( array(
-			'parent_slug' => 'options-general.php',
-			'page_title' => 'RS Font Awesome 6 – Settings',
-			'menu_title' => 'RS Font Awesome 6',
-			'menu_slug' => 'rs-font-awesome-6',
-			'post_id' => 'rs_icons', // $s = get_field( 's', 'rs_icons' );
-			'capability' => 'rabble',
-			'redirect' => false
-		) );
 	}
 	
 	public function enqueue_admin_bar_css() {
