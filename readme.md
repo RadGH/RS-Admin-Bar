@@ -59,6 +59,9 @@ Hyphens represent separators (technically, it's the end of a group).
 
 ## Changelog
 
+### 1.2.1
+* Removed unused settings page
+
 ### 1.2.0
 * Updated to use menus from the dashboard, even when on the front-end
 * Optimized query for edit site submenus
